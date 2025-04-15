@@ -1,0 +1,39 @@
+from flask import Flask, request
+from twilio.twiml.messaging_response import MessagingResponse
+import random
+
+app = Flask(__name__)
+
+# Lista de jugadores y roles
+jugadores = {}
+roles = ["Superviviente", "Asesino Oculto", "Zombie"]
+
+@app.route("/bot", methods=["POST"])
+def bot():
+    numero = request.form.get("From")
+    mensaje = request.form.get("Body").strip().lower()
+    respuesta = MessagingResponse()
+
+    if mensaje == "/start":
+        jugadores[numero] = random.choice(roles)
+        respuesta.message(f"¡Bienvenido! Tu rol es: {jugadores[numero]}. No lo reveles.")
+    
+    elif mensaje == "/role":
+        if numero in jugadores:
+            respuesta.message(f"Tu rol es: {jugadores[numero]}")
+        else:
+            respuesta.message("No tienes un rol asignado. Usa /start para comenzar.")
+
+    elif mensaje.startswith("/vote"):
+        respuesta.message("Votación iniciada. Los jugadores pueden votar para eliminar sospechosos.")
+
+    elif mensaje == "/attack":
+        victima = random.choice(list(jugadores.keys()))
+        respuesta.message(f"¡Ataque zombie! {victima} ha sido eliminado.")
+
+    return str(respuesta)
+
+if __name__ == "__main__":
+    app.run(debug=True)
+
+python bot.py
